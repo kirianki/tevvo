@@ -12,7 +12,7 @@ const isAuthenticated = computed(() => authStore.isAuthenticated)
   <div class="min-h-screen w-full flex flex-col m-0 p-0 text-gray-800 bg-white">
     <header class="flex items-center justify-between px-8 py-4 bg-gray-50 border-b border-gray-200 w-full flex-shrink-0">
       <RouterLink to="/">
-        <img alt="Vue logo" class="h-12 w-auto" src="@/assets/logo.svg" />
+        <img alt="Vue logo" class="h-12 w-auto" src="@/assets/main.png" />
       </RouterLink>
       
       <nav class="flex gap-4 items-center">
