@@ -1,38 +1,62 @@
 <template>
   <AuthLayout>
-    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 to-purple-800 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div class="text-center">
-          <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
-            <svg class="h-8 w-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-            </svg>
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-cyan-900 py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <!-- Animated Background Elements -->
+      <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      <div class="max-w-md w-full space-y-8 relative z-10">
+        <!-- Header Section -->
+        <div class="text-center animate-fade-in-up">
+          <div class="mx-auto h-24 w-24 flex items-center justify-center rounded-full bg-gradient-to-br from-cyan-400/20 to-blue-500/20 backdrop-blur-sm border border-white/20 shadow-2xl mb-6 transform hover:scale-105 transition-all duration-300 hover:shadow-cyan-500/25">
+            <div class="h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg">
+              <svg class="h-10 w-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+              </svg>
+            </div>
           </div>
-          <h2 class="mt-6 text-center text-3xl font-bold text-white">
-            Sign in to PokéDex Pro
+          <h2 class="text-4xl font-bold text-white tracking-tight mb-3 bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent">
+            Welcome Back
           </h2>
-          <p class="mt-2 text-center text-sm text-indigo-200">
-            Or
-            <router-link to="/register" class="font-medium text-white hover:text-indigo-100 transition-colors">
-              create a new account
-            </router-link>
+          <p class="text-lg text-cyan-200 mb-4 font-medium">
+            Sign in to your PokéDex Pro account
           </p>
+          <div class="inline-flex items-center gap-2 text-sm text-slate-300 bg-white/5 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+            <span>Don't have an account?</span>
+            <router-link 
+              to="/register" 
+              class="font-semibold text-cyan-400 hover:text-cyan-300 transition-all duration-200 hover:underline underline-offset-2 decoration-cyan-400/50"
+            >
+              Create one here
+            </router-link>
+          </div>
         </div>
 
-        <!-- Show redirect loading state for Google login -->
-        <div v-if="authStore.redirectInProgress" class="rounded-lg bg-blue-500/20 p-4 border border-blue-500/30 backdrop-blur-sm">
+        <!-- Show redirect loading state for Google login (commented out but kept for potential future use) -->
+        <!-- <div v-if="authStore.redirectInProgress" class="rounded-lg bg-blue-500/20 p-4 border border-blue-500/30 backdrop-blur-sm">
           <div class="flex items-center">
             <LoadingSpinner class="h-5 w-5 text-blue-300 mr-3" />
             <div class="text-sm text-white">
               Redirecting to Google for authentication...
             </div>
           </div>
-        </div>
+        </div> -->
 
-        <form class="mt-8 space-y-6" @submit.prevent="handleEmailLogin">
-          <div class="space-y-4 rounded-xl bg-white/5 backdrop-blur-sm p-6 border border-white/10">
-            <div>
-              <label for="email-address" class="block text-sm font-medium text-white/80 mb-1">Email address</label>
+        <!-- Login Form -->
+        <form class="mt-8 space-y-6 animate-fade-in-up animation-delay-200" @submit.prevent="handleEmailLogin">
+          <!-- Form Fields Container -->
+          <div class="space-y-6 rounded-2xl bg-white/8 backdrop-blur-xl p-8 border border-white/20 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 hover:border-white/30">
+            <!-- Email Field -->
+            <div class="space-y-2 group">
+              <label for="email-address" class="block text-sm font-semibold text-white/90 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+                Email Address
+              </label>
               <input
                 id="email-address"
                 v-model="form.email"
@@ -40,52 +64,106 @@
                 type="email"
                 autocomplete="email"
                 required
-                :disabled="authStore.loading || authStore.redirectInProgress"
-                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Email address"
+                :disabled="authStore.loading"
+                class="w-full px-4 py-4 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/50 transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent focus:bg-white/10 focus:shadow-lg focus:shadow-cyan-500/20 hover:border-white/40 hover:bg-white/8 disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Enter your email address"
               />
             </div>
-            <div>
-              <label for="password" class="block text-sm font-medium text-white/80 mb-1">Password</label>
-              <input
-                id="password"
-                v-model="form.password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                required
-                :disabled="authStore.loading || authStore.redirectInProgress"
-                class="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Password"
-              />
+
+            <!-- Password Field -->
+            <div class="space-y-2 group">
+              <label for="password" class="block text-sm font-semibold text-white/90 mb-2 flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Password
+              </label>
+              <div class="relative">
+                <input
+                  id="password"
+                  v-model="form.password"
+                  name="password"
+                  :type="showPassword ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  required
+                  :disabled="authStore.loading"
+                  class="w-full px-4 py-4 pr-12 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/50 transition-all duration-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent focus:bg-white/10 focus:shadow-lg focus:shadow-cyan-500/20 hover:border-white/40 hover:bg-white/8 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  :disabled="authStore.loading"
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 text-white/50 hover:text-white/80 transition-colors duration-200 disabled:opacity-50"
+                >
+                  <svg v-if="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.5 8.5m1.378 1.378l.85.85m4.242 4.242L15.5 15.5m-1.378-1.378l-.85-.85m0 0L8.5 8.5m4.242 4.242L15.5 15.5" />
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Forgot Password Link -->
+            <div class="flex justify-end">
+              <a href="#" class="text-sm text-cyan-400 hover:text-cyan-300 transition-colors duration-200 font-medium hover:underline underline-offset-2 decoration-cyan-400/50">
+                Forgot your password?
+              </a>
             </div>
           </div>
 
-          <!-- Error display -->
-          <div v-if="authStore.error" class="rounded-lg bg-red-500/20 p-4 border border-red-500/30 backdrop-blur-sm">
-            <div class="flex items-center text-sm text-white">
-              <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {{ authStore.error }}
+          <!-- Error Message -->
+          <Transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+            enter-to-class="transform scale-100 opacity-100 translate-y-0"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="transform scale-100 opacity-100 translate-y-0"
+            leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+          >
+            <div v-if="authStore.error" class="rounded-xl bg-red-500/10 p-4 border border-red-500/30 backdrop-blur-sm shadow-lg">
+              <div class="flex items-center text-sm text-red-200">
+                <div class="flex-shrink-0 mr-3">
+                  <div class="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center">
+                    <svg class="h-4 w-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <p class="font-medium text-red-200">Authentication Error</p>
+                  <p class="text-red-300">{{ authStore.error }}</p>
+                </div>
+              </div>
             </div>
-          </div>
+          </Transition>
 
-          <!-- Email login submit button -->
+          <!-- Submit Button -->
           <div>
             <button
               type="submit"
-              :disabled="authStore.loading || authStore.redirectInProgress || !form.email || !form.password"
-              class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-indigo-500/20"
+              :disabled="authStore.loading || !form.email || !form.password"
+              class="group relative w-full flex justify-center items-center py-4 px-6 border border-transparent text-base font-semibold rounded-xl text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 focus:ring-offset-transparent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-xl hover:shadow-cyan-500/25 transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 overflow-hidden"
             >
-              <span v-if="authStore.loading && !authStore.redirectInProgress" class="absolute left-0 inset-y-0 flex items-center pl-3">
+              <div class="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+              
+              <span v-if="authStore.loading" class="absolute left-4">
                 <LoadingSpinner class="h-5 w-5 text-white" />
               </span>
-              {{ getEmailButtonText() }}
+              <span :class="{ 'ml-6': authStore.loading }" class="relative z-10 flex items-center gap-2">
+                <span>{{ getEmailButtonText() }}</span>
+                <svg v-if="!authStore.loading" class="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+              </span>
             </button>
           </div>
 
-          <!-- Divider -->
+          <!-- Google login section (commented out) -->
+          <!--
           <div class="mt-6">
             <div class="relative">
               <div class="absolute inset-0 flex items-center">
@@ -96,7 +174,6 @@
               </div>
             </div>
 
-            <!-- Google login button -->
             <div class="mt-6">
               <button
                 type="button"
@@ -114,6 +191,31 @@
               </button>
             </div>
           </div>
+          -->
+
+          <!-- Additional Features Info -->
+          <div class="mt-8 text-center">
+            <div class="inline-flex items-center justify-center space-x-6 text-xs text-white/60">
+              <div class="flex items-center gap-1">
+                <svg class="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                Secure Login
+              </div>
+              <div class="flex items-center gap-1">
+                <svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+                </svg>
+                Instant Access
+              </div>
+              <div class="flex items-center gap-1">
+                <svg class="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                </svg>
+                Free Features
+              </div>
+            </div>
+          </div>
         </form>
       </div>
     </div>
@@ -121,7 +223,7 @@
 </template>
 
 <script setup>
-import { reactive, onMounted, watch, nextTick } from 'vue'
+import { reactive, ref, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AuthLayout from '@/layouts/AuthLayout.vue'
@@ -129,6 +231,8 @@ import LoadingSpinner from '@/components/LoadingSpinner.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const showPassword = ref(false)
 
 // Form reactive data
 const form = reactive({
@@ -138,7 +242,7 @@ const form = reactive({
 
 /**
  * Component initialization
- * Handles both fresh page loads and returns from Google OAuth redirect
+ * Handles both fresh page loads and returns from Google OAuth redirect (commented out)
  */
 onMounted(async () => {
   console.log('🚀 LoginView mounted')
@@ -150,9 +254,9 @@ onMounted(async () => {
     console.log('⚙️ Initializing auth state listener...')
     await authStore.initializeAuth()
     
-    // Check for Google OAuth redirect result
-    console.log('🔍 Checking for Google redirect result...')
-    await authStore.checkRedirectResult()
+    // Check for Google OAuth redirect result (commented out)
+    // console.log('🔍 Checking for Google redirect result...')
+    // await authStore.checkRedirectResult()
     
     // If user is already authenticated, redirect immediately
     if (authStore.user) {
@@ -196,8 +300,9 @@ const handleEmailLogin = async () => {
 }
 
 /**
- * Handle Google OAuth login initiation
+ * Handle Google OAuth login initiation (commented out but kept for potential future use)
  */
+/*
 const handleGoogleLogin = async () => {
   console.log('🔍 Google login button clicked')
   
@@ -214,6 +319,7 @@ const handleGoogleLogin = async () => {
     // Error is already set in the store
   }
 }
+*/
 
 /**
  * Navigate to dashboard with proper error handling
@@ -239,18 +345,16 @@ const navigateToDashboard = async () => {
  * Get dynamic text for email login button
  */
 const getEmailButtonText = () => {
-  if (authStore.redirectInProgress) {
-    return 'Redirecting...'
-  }
   if (authStore.loading) {
     return 'Signing in...'
   }
-  return 'Sign in'
+  return 'Sign In'
 }
 
 /**
- * Get dynamic text for Google login button
+ * Get dynamic text for Google login button (commented out)
  */
+/*
 const getGoogleButtonText = () => {
   if (authStore.redirectInProgress) {
     return 'Redirecting to Google...'
@@ -260,10 +364,11 @@ const getGoogleButtonText = () => {
   }
   return 'Sign in with Google'
 }
+*/
 
 /**
  * Watch for authentication state changes
- * This handles both email login success and Google OAuth callback
+ * This handles email login success (Google OAuth callback commented out)
  */
 watch(() => authStore.user, async (newUser, oldUser) => {
   console.log('👀 Auth user state changed:', {
@@ -304,3 +409,36 @@ watch(() => authStore.error, (error) => {
   }
 }, { immediate: false })
 </script>
+
+<style scoped>
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+</style>
