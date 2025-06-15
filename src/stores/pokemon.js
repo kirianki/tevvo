@@ -7,7 +7,7 @@ export const usePokemonStore = defineStore('pokemon', () => {
   const pokemonList = ref([])
   const currentPokemon = ref(null)
   const currentEvolutionChain = ref([])
-  const favorites = ref([])
+  const favorites = ref([]) // Now stores full Pokemon objects
   const loading = ref(false)
   const error = ref(null)
   const types = ref([])
@@ -15,14 +15,87 @@ export const usePokemonStore = defineStore('pokemon', () => {
   const currentPage = ref(1)
   const itemsPerPage = ref(20)
 
-  // Initialize favorites from localStorage
-  const initializeFavorites = () => {
+  // Update the initializeFavorites function to better handle invalid data
+  const initializeFavorites = async () => {
     try {
       const stored = localStorage.getItem('pokemonFavorites')
-      favorites.value = stored ? JSON.parse(stored) : []
+      if (!stored) {
+        favorites.value = []
+        return
+      }
+
+      let parsed;
+      try {
+        parsed = JSON.parse(stored)
+      } catch (e) {
+        console.error('Invalid JSON in favorites, resetting...')
+        favorites.value = []
+        saveFavorites()
+        return
+      }
+      
+      if (!Array.isArray(parsed)) {
+        console.error('Favorites is not an array, resetting...')
+        favorites.value = []
+        saveFavorites()
+        return
+      }
+
+      if (parsed.length === 0) {
+        favorites.value = []
+        return
+      }
+
+      // Check first item to determine format
+      const firstItem = parsed[0]
+      
+      if (typeof firstItem === 'number') {
+        console.log('Migrating favorites from ID format to object format...')
+        await migrateFavoritesFromIds(parsed.filter(id => typeof id === 'number'))
+      } else if (typeof firstItem === 'object' && firstItem.id) {
+        // New format - filter out invalid entries
+        favorites.value = parsed.filter(p => p && p.id && typeof p.id === 'number')
+      } else {
+        console.warn('Invalid favorites format in localStorage, resetting...')
+        favorites.value = []
+      }
+      
+      saveFavorites()
     } catch (err) {
       console.error('Error loading favorites from localStorage:', err)
       favorites.value = []
+      saveFavorites()
+    }
+  }
+
+  // Update migrateFavoritesFromIds to be more defensive
+  const migrateFavoritesFromIds = async (favoriteIds) => {
+    try {
+      const validIds = favoriteIds.filter(id => typeof id === 'number' && id > 0)
+      console.log(`Migrating ${validIds.length} valid favorites...`)
+      
+      const pokemonPromises = validIds.map(async (id) => {
+        try {
+          return await pokemonApi.getPokemon(id)
+        } catch (err) {
+          console.warn(`Failed to migrate favorite Pokemon ${id}:`, err)
+          return null
+        }
+      })
+
+      const results = await Promise.allSettled(pokemonPromises)
+      const migratedFavorites = results
+        .filter(result => result.status === 'fulfilled' && result.value !== null)
+        .map(result => result.value)
+
+      favorites.value = migratedFavorites
+      saveFavorites()
+      
+      console.log(`Successfully migrated ${migratedFavorites.length} favorites`)
+    } catch (err) {
+      console.error('Error migrating favorites:', err)
+      favorites.value = []
+      saveFavorites()
     }
   }
 
@@ -37,7 +110,8 @@ export const usePokemonStore = defineStore('pokemon', () => {
 
   // Computed properties
   const favoritePokemon = computed(() => {
-    return pokemonList.value.filter(pokemon => favorites.value.includes(pokemon.id))
+    // Since favorites now contains full Pokemon objects, just return them
+    return favorites.value
   })
 
   const isLoading = computed(() => loading.value)
@@ -153,28 +227,74 @@ export const usePokemonStore = defineStore('pokemon', () => {
     }
   }
 
-  const toggleFavorite = (pokemonId) => {
-    if (!pokemonId) return
+  const toggleFavorite = async (pokemon) => {
+    if (!pokemon) return
     
-    const index = favorites.value.indexOf(pokemonId)
+    // Handle both full Pokemon objects and just IDs
+    let pokemonObj = pokemon
+    if (typeof pokemon === 'number' || typeof pokemon === 'string') {
+      // If we got an ID, try to find the full Pokemon object
+      pokemonObj = pokemonList.value.find(p => p.id === parseInt(pokemon)) ||
+                   currentPokemon.value?.id === parseInt(pokemon) ? currentPokemon.value : null
+      
+      // If we can't find it in memory, fetch it
+      if (!pokemonObj) {
+        try {
+          pokemonObj = await pokemonApi.getPokemon(pokemon)
+        } catch (err) {
+          console.error('Error fetching Pokemon for favorites:', err)
+          return
+        }
+      }
+    }
+    
+    if (!pokemonObj || !pokemonObj.id) return
+    
+    const index = favorites.value.findIndex(fav => fav.id === pokemonObj.id)
     if (index === -1) {
-      favorites.value.push(pokemonId)
+      // Add full Pokemon object to favorites
+      favorites.value.push(pokemonObj)
     } else {
+      // Remove from favorites
       favorites.value.splice(index, 1)
     }
     
     saveFavorites()
   }
 
-  const addToFavorites = (pokemonId) => {
-    if (!pokemonId || favorites.value.includes(pokemonId)) return
+  const addToFavorites = async (pokemon) => {
+    if (!pokemon) return
     
-    favorites.value.push(pokemonId)
+    // Handle both full Pokemon objects and just IDs
+    let pokemonObj = pokemon
+    if (typeof pokemon === 'number' || typeof pokemon === 'string') {
+      if (isFavorite(pokemon)) return
+      
+      // Try to find the full Pokemon object
+      pokemonObj = pokemonList.value.find(p => p.id === parseInt(pokemon)) ||
+                   currentPokemon.value?.id === parseInt(pokemon) ? currentPokemon.value : null
+      
+      // If we can't find it in memory, fetch it
+      if (!pokemonObj) {
+        try {
+          pokemonObj = await pokemonApi.getPokemon(pokemon)
+        } catch (err) {
+          console.error('Error fetching Pokemon for favorites:', err)
+          return
+        }
+      }
+    } else if (isFavorite(pokemon.id)) {
+      return
+    }
+    
+    if (!pokemonObj || !pokemonObj.id) return
+    
+    favorites.value.push(pokemonObj)
     saveFavorites()
   }
 
   const removeFromFavorites = (pokemonId) => {
-    const index = favorites.value.indexOf(pokemonId)
+    const index = favorites.value.findIndex(fav => fav.id === pokemonId)
     if (index !== -1) {
       favorites.value.splice(index, 1)
       saveFavorites()
@@ -182,7 +302,18 @@ export const usePokemonStore = defineStore('pokemon', () => {
   }
 
   const isFavorite = (pokemonId) => {
-    return favorites.value.includes(pokemonId)
+    return favorites.value.some(fav => fav.id === pokemonId)
+  }
+
+  const clearAllFavorites = () => {
+    favorites.value = []
+    saveFavorites()
+  }
+
+  const loadFavorites = async () => {
+    // Force re-initialization to handle any migration if needed
+    await initializeFavorites()
+    return favorites.value
   }
 
   const loadMorePokemon = async () => {
@@ -271,8 +402,12 @@ export const usePokemonStore = defineStore('pokemon', () => {
     currentPage.value = 1
   }
 
-  // Initialize favorites on store creation
-  initializeFavorites()
+  // Manual clear localStorage for debugging
+  const resetFavoritesStorage = () => {
+    localStorage.removeItem('pokemonFavorites')
+    favorites.value = []
+    console.log('Favorites storage cleared')
+  }
 
   return {
     // State
@@ -302,6 +437,8 @@ export const usePokemonStore = defineStore('pokemon', () => {
     addToFavorites,
     removeFromFavorites,
     isFavorite,
+    clearAllFavorites,
+    loadFavorites,
     loadMorePokemon,
     getPokemonById,
     getPokemonByName,
@@ -310,6 +447,8 @@ export const usePokemonStore = defineStore('pokemon', () => {
     sortPokemon,
     clearError,
     clearCurrentPokemon,
-    reset
+    reset,
+    resetFavoritesStorage, // For debugging
+    initializeFavorites // Make this available for manual calls
   }
 })

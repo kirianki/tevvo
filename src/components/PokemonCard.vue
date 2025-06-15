@@ -12,12 +12,14 @@
       />
       <div v-else class="text-gray-400 text-sm">Loading image...</div>
     </div>
-    <h3 class="mt-2 text-center font-semibold capitalize">{{ pokemonData.name }}</h3>
+    <h3 class="mt-2 text-center font-semibold capitalize">
+      {{ pokemonData.name || 'Unknown' }}
+    </h3>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch, toRaw, isRef } from 'vue'
 
 const props = defineProps({
   pokemon: {
@@ -32,12 +34,31 @@ const props = defineProps({
 
 const pokemonData = ref({})
 
-onMounted(async () => {
-  try {
-    const res = await fetch(props.pokemon.url)
-    pokemonData.value = await res.json()
-  } catch (err) {
-    console.error('Failed to fetch Pokémon details:', err)
+// Function to load data only if needed
+const loadPokemonData = async (poke) => {
+  const rawPoke = isRef(poke) ? toRaw(poke.value) : toRaw(poke)
+
+  if (rawPoke?.sprites) {
+    pokemonData.value = rawPoke // already a full Pokémon object
+  } else if (rawPoke?.url) {
+    try {
+      const response = await fetch(rawPoke.url)
+      if (!response.ok) throw new Error('Failed to fetch Pokémon')
+      pokemonData.value = await response.json()
+    } catch (error) {
+      console.error('Failed to load Pokémon data:', error)
+    }
+  } else {
+    console.warn('Invalid pokemon prop passed:', rawPoke)
   }
-})
+}
+
+// Watch for changes (reactivity-safe)
+watch(
+  () => props.pokemon,
+  (newVal) => {
+    loadPokemonData(newVal)
+  },
+  { immediate: true }
+)
 </script>
